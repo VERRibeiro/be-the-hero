@@ -16,11 +16,23 @@ module.exports = {
     },
     async index(request, response){
         const { page = 1}  = request.query;
+
+        const [total] = await connection('incidents').count();
+
         const incidents = await connection('incidents')
+        .join('ongs', 'ongs.id', '=', 'incidents.ong_id')
         .limit(5)
         .offset((page - 1) * 5)
-        .select('*');
-        return response.json({incidents});
+        .select('incidents.*',
+         'ongs.name', 
+         'ongs.email', 
+         'ongs.whatsapp', 
+         'ongs.city', 
+         'ongs.uf');
+
+        response.header('X-Total-Count', total['count(*)']);
+        console.log(incidents);
+        return response.json(incidents);
     },
     async delete(request, response){
         const { id } = request.params;
